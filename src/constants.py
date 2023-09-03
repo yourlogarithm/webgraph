@@ -1,0 +1,8 @@
+import os
+
+MAX_ITERATIONS = os.getenv('MAX_ITERATIONS', 20)
+DAMPING_FACTOR = os.getenv('DAMPING_FACTOR', .85)
+AGGREGATOR_ENDPOINT = os.getenv('AGGREGATOR_ENDPOINT', 'http://localhost:8001/increment')
+PROJECTION_GRAPH_NAME = 'connections'
+CONNECTION_NAME = 'LINKS_TO'
+NODE_NAME = 'Page'
