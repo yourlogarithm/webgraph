@@ -1,14 +1,12 @@
 import asyncio
 import json
-import os
 
 import aiohttp
 from aiokafka import AIOKafkaConsumer
 from neo4j import AsyncGraphDatabase, AsyncDriver, AsyncManagedTransaction
 
 from constants import DAMPING_FACTOR, MAX_ITERATIONS, AGGREGATOR_ENDPOINT, PROJECTION_GRAPH_NAME, NODE_NAME, CONNECTION_NAME
-
-MAX_WORKERS = os.getenv('MAX_WORKERS', 10)
+from settings import Settings
 
 
 async def insert_transaction(tx: AsyncManagedTransaction, url: str, edges: list[str]):
@@ -47,13 +45,13 @@ async def pagerank(tx: AsyncManagedTransaction):
 
 
 async def main():
-    consumer = AIOKafkaConsumer('ranker', bootstrap_servers='localhost:9092')
-    neo4j_credentials = os.getenv('NEO4J_USER', 'neo4j'), os.getenv('NEO4J_PASSWORD', 'password')
-    neo4j_driver = AsyncGraphDatabase.driver('bolt://localhost:7687', auth=neo4j_credentials)
+    settings = Settings()
+    consumer = AIOKafkaConsumer('ranker', bootstrap_servers=settings.kafka_uri)
+    neo4j_driver = AsyncGraphDatabase.driver(settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password))
     client = aiohttp.ClientSession()
     await consumer.start()
     task_queue = asyncio.Queue()
-    semaphore = asyncio.Semaphore(MAX_WORKERS)
+    semaphore = asyncio.Semaphore(settings.max_workers)
     print('Started...')
     try:
         async for msg in consumer:
