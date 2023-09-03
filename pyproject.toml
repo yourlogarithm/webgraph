@@ -12,6 +12,7 @@ aiokafka = "^0.8.1"
 neo4j = "^5.12.0"
 aiohttp = "^3.8.5"
 pydantic-settings = "^2.0.3"
+common-utils = {git = "https://github.com/yourlogarithm/common-utils.git"}
 
 
 [tool.poetry.group.test.dependencies]

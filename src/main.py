@@ -3,6 +3,8 @@ import json
 
 import aiohttp
 from aiokafka import AIOKafkaConsumer
+from common_utils import persistent_execution
+from common_utils.logger import Logger
 from neo4j import AsyncGraphDatabase, AsyncDriver, AsyncManagedTransaction
 
 from constants import DAMPING_FACTOR, MAX_ITERATIONS, AGGREGATOR_ENDPOINT, PROJECTION_GRAPH_NAME, NODE_NAME, CONNECTION_NAME
@@ -49,14 +51,15 @@ async def main():
     consumer = AIOKafkaConsumer('ranker', bootstrap_servers=settings.kafka_uri)
     neo4j_driver = AsyncGraphDatabase.driver(settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password))
     client = aiohttp.ClientSession()
-    await consumer.start()
+    logger = Logger(settings.log_level)
+    await persistent_execution(consumer.start, tries=5, delay=5, backoff=5, logger_=logger)
     task_queue = asyncio.Queue()
     semaphore = asyncio.Semaphore(settings.max_workers)
-    print('Started...')
+    logger.info('Started...')
     try:
         async for msg in consumer:
             url, edges = json.loads(msg.value.decode('utf-8'))
-            print(url)
+            logger.info(url)
             await task_queue.put(asyncio.create_task(insert_page(neo4j_driver, semaphore, url, edges)))
             async with client.get(AGGREGATOR_ENDPOINT) as response:
                 if response.status == 200 and (await response.json())['calculate']:
