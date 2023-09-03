@@ -48,7 +48,8 @@ async def pagerank(tx: AsyncManagedTransaction):
 
 async def main():
     consumer = AIOKafkaConsumer('ranker', bootstrap_servers='localhost:9092')
-    neo4j_driver = AsyncGraphDatabase.driver('bolt://localhost:7687', auth=("neo4j", "password"))
+    neo4j_credentials = os.getenv('NEO4J_USER', 'neo4j'), os.getenv('NEO4J_PASSWORD', 'password')
+    neo4j_driver = AsyncGraphDatabase.driver('bolt://localhost:7687', auth=neo4j_credentials)
     client = aiohttp.ClientSession()
     await consumer.start()
     task_queue = asyncio.Queue()
