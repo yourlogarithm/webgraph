@@ -51,7 +51,7 @@ async def main():
     consumer = AIOKafkaConsumer('ranker', bootstrap_servers=settings.kafka_uri)
     neo4j_driver = AsyncGraphDatabase.driver(settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password))
     client = aiohttp.ClientSession()
-    logger = Logger(settings.log_level)
+    logger = Logger('webgraph', settings.log_level)
     await persistent_execution(consumer.start, tries=5, delay=5, backoff=5, logger_=logger)
     task_queue = asyncio.Queue()
     semaphore = asyncio.Semaphore(settings.max_workers)
