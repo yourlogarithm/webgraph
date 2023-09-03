@@ -27,7 +27,7 @@ async def drop_graph(tx):
 
 async def insert_page(driver: AsyncDriver, semaphore: asyncio.Semaphore, url: str, edges: list[str]):
     async with semaphore:
-        async with driver.session(database='pages') as session:
+        async with driver.session() as session:
             await session.execute_write(insert_transaction, url, edges)
 
 
@@ -63,7 +63,7 @@ async def main():
             await task_queue.put(asyncio.create_task(insert_page(neo4j_driver, semaphore, url, edges)))
             async with client.get(AGGREGATOR_ENDPOINT) as response:
                 if response.status == 200 and (await response.json())['calculate']:
-                    await task_queue.put(asyncio.create_task(neo4j_driver.session(database='pages').write_transaction(pagerank)))
+                    await task_queue.put(asyncio.create_task(neo4j_driver.session().write_transaction(pagerank)))
         await task_queue.join()
     finally:
         await consumer.stop()
